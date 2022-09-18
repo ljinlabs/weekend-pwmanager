@@ -1,6 +1,11 @@
+from dotenv import load_dotenv
 import random
+import pymysql
 from secrets import choice
+import os
 
+
+load_dotenv()
 # todo
 # 1. password generating algorithm
 
@@ -11,6 +16,11 @@ UPPERCASE = [chr(i) for i in range(65, 91)]
 SPECIAL = [chr(i) for i in range(33, 38)] + [chr(j) for j in range(58, 65)] + [chr(k) for k in range(91, 97) if k != 92]
 PS1_CHOICES = NUMS + LOWERCASE
 PS2_CHOICES = NUMS + LOWERCASE + UPPERCASE + SPECIAL
+
+HOST = os.getenv('HOST')
+DBUSER = os.getenv('DBUSER')
+DBPASSWORD = os.getenv('DBPASSWORD')
+PORT = int(os.getenv('PORT'))
 
 def get_length(security_level):
     ## password - level0, level1,level2
@@ -52,16 +62,14 @@ def generate_password(security_level=0):
 
     return password
 
-        #미래의 내가 에러 처리를 하겠지...?
 # 1.1 get user input? what input?
-# 2. show generated password
-
 def choice_security_level():
     security_level = int(input("보안 등급을 선택하세요 (0,1,2) : "))
     if security_level not in [0,1,2]:
         security_level = 0
     return security_level
 
+# 2. show generated password
 def show_password():
     security_level = choice_security_level()
 
@@ -74,14 +82,22 @@ def show_password():
         user_answer = input("이 비밀번호로 할까요? (y/n): ")
         if user_answer in ["y", "Y", "YES", "Yes", "yes"]:
             result = False
+            # 4. create database
+            conn = pymysql.connect(host=HOST, user=DBUSER, password=DBPASSWORD, port=PORT, charset='utf8')
+            cur = conn.cursor()
+            cur.execute("CREATE DATABASE IF NOT EXISTS passwordDB")
+            cur.execute("USE passwordDB")
+            cur.execute("CREATE TABLE IF NOT EXISTS passwordTbl (password       CHAR(16))")
+            cur.execute("INSERT INTO passwordTbl VALUES (%s)", password)
+            conn.commit()
+            conn.close()
+        print("비밀번호가 저장되었습니다.")
+        print("저장된 비밀번호 : ", password)
             
 
-
-
-# sql
-# 4. create database
-# 5. check input valid
-# 6. store data
+    
+    # 5. check input valid
+    # 6. store data
 #
 # fetch
 # 7. get password by website
